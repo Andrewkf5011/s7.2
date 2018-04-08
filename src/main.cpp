@@ -1,63 +1,109 @@
 #include <mbed.h>
 #include <EthernetInterface.h>
 #include <rtos.h>
-
 #include <C12832.h>
-char buffer[1024]; /* 1k bytes */
+#include <string>
+#include "communications.h"
 
-DigitalOut LED[] = { /* initialise to 1==off */
+//[buffer] A buffer made of 1l bytes, where the
+//recieved messages are stored.
+char buffer[1024];
+
+//[name] These are the IDs of all the different LEDs.
+char *name[] = {"red","green","blue"};
+
+//[LED] These are all the different LEDs.
+DigitalOut LED[] =
+{
+    /* initialise to 1==off */
     DigitalOut(LED_RED,1),
     DigitalOut(LED_GREEN,1),
     DigitalOut(LED_BLUE,1)
 };
-char *name[] = {"red","green","blue"};
 
-void setLED(char *which, char *state) {
+
+/**
+ * @brief Sets an LED.
+ */
+void setLED(char *which, char *state)
+{
+    //[id] The ID of the LED.
     int id;
+
+    //[logic] The state to set the LED.
     int logic;
-    for( id=0 ; id<3 ; id++) {
+
+    //Check which LED to set.
+    for(id=0; id<3; id++)
+    {
         /* test for name match */
-        if( strcmp(which, name[id])==0 ) break; /* exit loop with current id */
+        if(strcmp(which, name[id])==0)
+        {
+            break; /* exit loop with current id */
+        }
     }
-    if( strcmp(state,"on")==0 )logic=0;
-    if( strcmp(state,"off")==0 )logic=1;
+
+    //Turn the LED on.
+    if(strcmp(state,"on") == 0)
+    {
+        logic = 0;
+    }
+    //Turn the LED off.
+    if(strcmp(state,"off") == 0)
+    {
+        logic = 1;
+    }
+
+    //Set the state of the LED.
     LED[id].write(logic);
+
     printf("led %d at %d \n", id, logic);
 }
 
-void process_message(char *buffer) {
-    /* message format is key:value\n */
-    char *key = buffer;  /* key is just at beginning of line */
-    char *value = strchr(buffer,':'); /* find ':' seperator */
-    *value = '\0'; /* mark end of key string */
-    value += 1;  /* move to start of value part */
-    char *eol = strchr(value, '\n'); /* find end of line */
+/**
+ * @brief Processes a message in the format:
+ *        key:value\n
+ */
+void process_message(char *buffer)
+{
+    //[key] The object to be used. (found at the beginning of the line).
+    char *key = buffer;
+    //printf("Key: %s\n", key);
+
+    // find ':' seperator */
+    char *value = strchr(buffer,':');
+    //printf("Value: %s\n", value);
+
+    /* mark end of key string */
+    *value = '\0';
+    //printf("Value_a: %s\n", value);
+
+    /* move to start of value part */
+    value += 1;
+    //printf("Value_b: %s\n", value);
+
+    /* find end of line */
+    char *eol = strchr(value, '\n');
+    //printf("EOL %s\n", eol);
+
     *eol = '\0';
+    //printf("EOL_a %s\n", eol);
+
+    //printf("Final Key: %s\n", key);
+    //printf("Final Value: %s\n", value);
+    //Set the LED using the key and the value.
     setLED(key, value);
 }
 
-int main() {
-    C12832 lcd(D11, D13, D12, D7, D10);
-    EthernetInterface eth;
-    UDPSocket udp;
+int main()
+{
+    Reciever reciever;
+    Processor processor;
 
-    printf("conecting on DHCP\n");
-    eth.connect();
-    const char *ip = eth.get_ip_address();
-    printf("IP address is: %s\n", ip ? ip : "No IP");
+    while(1)
+    {
+        char* msg = (char*)reciever.getMessage().c_str();
 
-    udp.open( &eth);
-
-    /* Listen for UDP on port 65000 */
-    udp.bind(65000);
-
-    printf("listening on 65000\n");
-
-    while(1){
-        SocketAddress source;
-        int len = udp.recvfrom( &source, buffer, sizeof(buffer));
-        buffer[len]='\0';
-        printf("message recieved\n%s\n", buffer);
-        process_message(buffer);
+        process_message(msg);
     }
 }

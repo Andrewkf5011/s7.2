@@ -17,7 +17,7 @@ class Reciever
 
         //[buffer] A buffer made of 1l bytes, where the
         //recieved messages are stored.
-        char buffer[1024];
+        char buffer[1024]; /* 1k bytes */
 
         //[ethernet] Handles the ethernet connection.
         EthernetInterface ethernet;

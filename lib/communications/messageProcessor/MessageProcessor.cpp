@@ -4,24 +4,14 @@
 
 MessageProcessor::MessageProcessor()
 {
-    
-}
 
-string MessageProcessor::getKey()
-{
-    return key;
-}
-
-string MessageProcessor::getValue()
-{
-    return value;
 }
 
 void MessageProcessor::decodeMessage(string message)
 {
     //Print out the message, and the length of the message (development only).
-    printf("%s\n", message.c_str());
-    printf("\nMessageLength: %d", message.length());
+    printf("\nMessage: %s", message.c_str());
+    printf("MessageLength: %d\n", message.length());
 
     //[seperatorLocation] Stores the location of the seperator
     //within the message.
@@ -45,4 +35,14 @@ void MessageProcessor::decodeMessage(string message)
 
     //Print out the value (development only).
     printf("Value: %s\n", value.c_str());
+}
+
+string MessageProcessor::getKey()
+{
+    return key;
+}
+
+string MessageProcessor::getValue()
+{
+    return value;
 }
